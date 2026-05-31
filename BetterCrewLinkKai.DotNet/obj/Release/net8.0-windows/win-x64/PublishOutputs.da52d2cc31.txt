@@ -1,0 +1,16 @@
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\BetterCrewLinkKai.DotNet.exe
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\BetterCrewLinkKai.DotNet.dll
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\BetterCrewLinkKai.DotNet.deps.json
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\BetterCrewLinkKai.DotNet.runtimeconfig.json
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\BetterCrewLinkKai.DotNet.pdb
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\NAudio.dll
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\NAudio.Asio.dll
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\NAudio.Core.dll
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\NAudio.Midi.dll
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\NAudio.Wasapi.dll
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\NAudio.WinForms.dll
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\NAudio.WinMM.dll
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\SocketIO.Core.dll
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\SocketIO.Serializer.Core.dll
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\SocketIO.Serializer.SystemTextJson.dll
+D:\VSCode\BetterCrewLink_DotNet\publish\win-x64\SocketIOClient.dll

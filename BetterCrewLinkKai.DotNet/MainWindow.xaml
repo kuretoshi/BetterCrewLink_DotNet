@@ -1,0 +1,672 @@
+﻿<Window x:Class="BetterCrewLinkKai.DotNet.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:models="clr-namespace:BetterCrewLinkKai.DotNet.Models"
+        xmlns:vm="clr-namespace:BetterCrewLinkKai.DotNet.ViewModels"
+        mc:Ignorable="d"
+        Title="BetterCrewLinkKai .NET"
+        Height="390"
+        MinHeight="390"
+        Width="280"
+        MinWidth="280"
+        Icon="Assets/icon.ico"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        Topmost="{Binding Settings.AlwaysOnTop}">
+    <Window.DataContext>
+        <vm:MainWindowViewModel />
+    </Window.DataContext>
+
+    <Grid Background="{StaticResource AppBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="24" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0"
+              Background="{StaticResource TitleBarBrush}"
+              MouseLeftButtonDown="OnTitleBarMouseLeftButtonDown">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="24" />
+                <ColumnDefinition Width="24" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="24" />
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                    Style="{StaticResource TitleIconButton}"
+                    Command="{Binding ToggleSettingsCommand}">
+                <Viewbox Width="14" Height="14">
+                    <Path Fill="White"
+                          Data="M19.43 12.98C19.47 12.66 19.5 12.34 19.5 12S19.47 11.34 19.43 11.02L21.54 9.37C21.73 9.22 21.78 8.95 21.66 8.73L19.66 5.27C19.54 5.05 19.28 4.96 19.05 5.05L16.56 6.05C16.04 5.65 15.5 5.32 14.87 5.07L14.5 2.42C14.46 2.18 14.25 2 14 2H10C9.75 2 9.54 2.18 9.5 2.42L9.13 5.07C8.5 5.32 7.96 5.66 7.44 6.05L4.95 5.05C4.72 4.96 4.46 5.05 4.34 5.27L2.34 8.73C2.21 8.95 2.27 9.22 2.46 9.37L4.57 11.02C4.53 11.34 4.5 11.67 4.5 12S4.53 12.66 4.57 12.98L2.46 14.63C2.27 14.78 2.22 15.05 2.34 15.27L4.34 18.73C4.46 18.95 4.72 19.04 4.95 18.95L7.44 17.95C7.96 18.35 8.5 18.68 9.13 18.93L9.5 21.58C9.54 21.82 9.75 22 10 22H14C14.25 22 14.46 21.82 14.5 21.58L14.87 18.93C15.5 18.68 16.04 18.34 16.56 17.95L19.05 18.95C19.28 19.04 19.54 18.95 19.66 18.73L21.66 15.27C21.78 15.05 21.73 14.78 21.54 14.63L19.43 12.98ZM12 15.5C10.07 15.5 8.5 13.93 8.5 12S10.07 8.5 12 8.5 15.5 10.07 15.5 12 13.93 15.5 12 15.5Z" />
+                </Viewbox>
+            </Button>
+            <Button Grid.Column="1"
+                    Style="{StaticResource TitleIconButton}"
+                    Command="{Binding LoadCommand}">
+                <Viewbox Width="14" Height="14">
+                    <Path Fill="White"
+                          Data="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4.01 7.58 4.01 12S7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.83 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12S8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z" />
+                </Viewbox>
+            </Button>
+            <TextBlock Grid.Column="2"
+                       Text="BetterCrewLinkKai v3.1.5-6"
+                       Foreground="{StaticResource PrimaryBrush}"
+                       FontSize="12"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       Margin="0" />
+            <Button Grid.Column="3"
+                    Style="{StaticResource TitleIconButton}"
+                    Command="{Binding CloseCommand}">
+                <Viewbox Width="14" Height="14">
+                    <Path Fill="White"
+                          Data="M18.3 5.71L16.89 4.3 12 9.17 7.11 4.3 5.7 5.71 10.59 10.6 5.7 15.49 7.11 16.9 12 12.01 16.89 16.9 18.3 15.49 13.41 10.6 18.3 5.71Z" />
+                </Viewbox>
+            </Button>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Margin="0,36,0,0"
+                            Visibility="{Binding ShowWaitingView, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Text="{Binding WaitingTitle}"
+                               FontSize="20"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,34" />
+
+                    <Grid Width="22" Height="22" Margin="0,0,0,28">
+                        <Canvas Width="22"
+                                Height="22"
+                                RenderTransformOrigin="0.5,0.5">
+                            <Canvas.RenderTransform>
+                                <RotateTransform />
+                            </Canvas.RenderTransform>
+                            <Canvas.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation Storyboard.TargetProperty="(Canvas.RenderTransform).(RotateTransform.Angle)"
+                                                             From="0"
+                                                             To="360"
+                                                             Duration="0:0:0.85" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Canvas.Triggers>
+                            <Ellipse Width="5"
+                                     Height="5"
+                                     Canvas.Left="8.5"
+                                     Canvas.Top="1.5"
+                                     Fill="{StaticResource PrimaryBrush}" />
+                        </Canvas>
+                    </Grid>
+
+                    <TextBlock Text="プリセット"
+                               FontSize="24"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,10" />
+
+                    <Grid x:Name="LaunchButtonGroup"
+                          HorizontalAlignment="Center"
+                          Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button Content="{Binding LaunchPlatformLabel}"
+                                Grid.Column="0"
+                                Command="{Binding LaunchGameCommand}"
+                                Style="{StaticResource LaunchButton}"
+                                MinWidth="98"
+                                Height="54"
+                                BorderThickness="4,4,2,4" />
+                        <Button Grid.Column="1"
+                                Content="v"
+                                Command="{Binding ToggleLaunchPlatformMenuCommand}"
+                                Style="{StaticResource LaunchDropdownButton}"
+                                Height="54"
+                                BorderThickness="2,4,4,4" />
+                        <Popup Grid.ColumnSpan="2"
+                               PlacementTarget="{Binding ElementName=LaunchButtonGroup}"
+                               Placement="Bottom"
+                               StaysOpen="False"
+                               IsOpen="{Binding IsLaunchPlatformMenuOpen}">
+                            <Border Background="{StaticResource PaperBrush}"
+                                    BorderBrush="#555555"
+                                    BorderThickness="1"
+                                    MinWidth="{Binding ActualWidth, ElementName=LaunchButtonGroup}">
+                                <StackPanel>
+                                    <Button Content="Steam"
+                                            Command="{Binding SelectLaunchPlatformCommand}"
+                                            CommandParameter="{x:Static models:GamePlatform.Steam}"
+                                            Style="{StaticResource TitleIconButton}"
+                                            Width="150"
+                                            Height="32"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,0" />
+                                    <Button Content="Epic"
+                                            Command="{Binding SelectLaunchPlatformCommand}"
+                                            CommandParameter="{x:Static models:GamePlatform.Epic}"
+                                            Style="{StaticResource TitleIconButton}"
+                                            Width="150"
+                                            Height="32"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,0" />
+                                    <Button Content="Other"
+                                            Command="{Binding SelectLaunchPlatformCommand}"
+                                            CommandParameter="{x:Static models:GamePlatform.Microsoft}"
+                                            Style="{StaticResource TitleIconButton}"
+                                            Width="150"
+                                            Height="32"
+                                            HorizontalContentAlignment="Left"
+                                            Padding="12,0" />
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
+
+                    <StackPanel Width="250"
+                                Margin="0,12,0,0"
+                                Visibility="Collapsed">
+                        <TextBlock Text="手動接続"
+                                   FontSize="13"
+                                   Foreground="{StaticResource SubtleTextBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,4" />
+                        <TextBox Text="{Binding LobbyCode, UpdateSourceTrigger=PropertyChanged}"
+                                 CharacterCasing="Upper"
+                                 MaxLength="6"
+                                 FontFamily="Source Code Pro, Consolas"
+                                 FontSize="22"
+                                 TextAlignment="Center"
+                                 Height="44"
+                                 Background="{StaticResource InputBrush}" />
+                        <Button Content="{Binding ConnectionButtonText}"
+                                Command="{Binding ToggleConnectionCommand}"
+                                Style="{StaticResource OutlinedActionButton}"
+                                HorizontalAlignment="Center" />
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding StatusMessage}"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               Foreground="{StaticResource SubtleTextBrush}"
+                               Width="240"
+                               Margin="0,16,0,0"
+                               Visibility="Collapsed" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Margin="0,36,0,0"
+                            Visibility="{Binding ShowMenuView, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock Text="メニュー"
+                               FontSize="24"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,14" />
+                    <Separator Width="280"
+                               Background="#333139"
+                               Margin="-12,0,-12,10" />
+                    <Button Content="公開ロビー"
+                            Style="{StaticResource OutlinedActionButton}"
+                            HorizontalAlignment="Center"
+                            MinWidth="104"
+                            Margin="0,0,0,0" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Margin="0,8,0,0"
+                            Visibility="{Binding ShowVoiceView, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid Width="236" Height="92">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="92" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="30" />
+                        </Grid.ColumnDefinitions>
+
+                        <Grid Grid.Column="0">
+                            <Grid Width="78"
+                                  Height="78"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  ClipToBounds="False">
+                                <Ellipse Width="78"
+                                         Height="78"
+                                         Stroke="#2ECC71"
+                                         StrokeThickness="2"
+                                         Fill="#25232A" />
+                                <Grid Width="78"
+                                      Height="78"
+                                      ClipToBounds="True">
+                                    <Grid.Clip>
+                                        <EllipseGeometry Center="39,39" RadiusX="39" RadiusY="39" />
+                                    </Grid.Clip>
+                                    <Image Source="{Binding LocalHatBackImage}"
+                                           Width="{Binding LocalHatWidth}"
+                                           Margin="{Binding LocalHatMargin}"
+                                           Stretch="Uniform"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Top" />
+                                    <Image Source="{Binding LocalAvatarImage}"
+                                           Width="82"
+                                           Stretch="Uniform"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Top"
+                                           Margin="-9,15,0,0" />
+                                    <Image Source="{Binding LocalSkinImage}"
+                                           Width="{Binding LocalSkinWidth}"
+                                           Margin="{Binding LocalSkinMargin}"
+                                           Stretch="Uniform"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Top" />
+                                </Grid>
+                                <Image Source="{Binding LocalVisorImage}"
+                                       Width="{Binding LocalVisorWidth}"
+                                       Margin="{Binding LocalVisorMargin}"
+                                       Stretch="Uniform"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Top" />
+                                <Image Source="{Binding LocalHatFrontImage}"
+                                       Width="{Binding LocalHatWidth}"
+                                       Margin="{Binding LocalHatMargin}"
+                                       Stretch="Uniform"
+                                       HorizontalAlignment="Left"
+                                       VerticalAlignment="Top" />
+                            </Grid>
+                        </Grid>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Top" Margin="0,0,0,0">
+                            <TextBlock Text="{Binding LocalPlayerName}"
+                                       FontSize="20"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,0,0,6" />
+                            <Border Background="#4B4B4B"
+                                    CornerRadius="4"
+                                    Padding="6,4"
+                                    HorizontalAlignment="Stretch">
+                                <TextBlock Text="{Binding CurrentLobbyCode}"
+                                           FontFamily="Source Code Pro, Consolas"
+                                           FontSize="24"
+                                           Foreground="White"
+                                           TextAlignment="Center" />
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Center">
+                            <Viewbox Width="18"
+                                     Height="18"
+                                     HorizontalAlignment="Center"
+                                     Margin="0,0,0,8">
+                                <Path Fill="White"
+                                      Data="M12 14C13.66 14 15 12.66 15 11V5C15 3.34 13.66 2 12 2S9 3.34 9 5V11C9 12.66 10.34 14 12 14ZM17.3 11C17.3 14 14.76 16.1 12 16.1S6.7 14 6.7 11H5C5 14.41 7.72 17.23 11 17.72V21H13V17.72C16.28 17.24 19 14.42 19 11H17.3Z" />
+                            </Viewbox>
+                            <Viewbox Width="18"
+                                     Height="18"
+                                     HorizontalAlignment="Center">
+                                <Path Fill="White"
+                                      Data="M3 9V15H7L12 20V4L7 9H3ZM16.5 12C16.5 10.23 15.5 8.71 14 7.97V16.02C15.48 15.29 16.5 13.76 16.5 12ZM14 3.23V5.29C16.89 6.15 19 8.83 19 12S16.89 17.85 14 18.71V20.77C18.01 19.86 21 16.28 21 12S18.01 4.14 14 3.23Z" />
+                            </Viewbox>
+                        </StackPanel>
+                    </Grid>
+
+                    <Separator Width="280" Background="#333139" Margin="-12,0,-12,0" />
+
+                    <ItemsControl ItemsSource="{Binding OtherPlayers}"
+                                  Width="240"
+                                  Margin="0,8,0,0">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel HorizontalAlignment="Center" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Width="56"
+                                            Margin="2"
+                                            HorizontalAlignment="Center"
+                                            Opacity="{Binding Opacity}">
+                                    <Grid Width="44" Height="44" HorizontalAlignment="Center">
+                                        <Grid Width="38"
+                                              Height="38"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              ClipToBounds="False">
+                                            <Ellipse Width="38"
+                                                     Height="38"
+                                                     Stroke="#2ECC71"
+                                                     StrokeThickness="1.5"
+                                                     Fill="#25232A" />
+                                            <Grid Width="38"
+                                                  Height="38"
+                                                  ClipToBounds="True">
+                                                <Grid.Clip>
+                                                    <EllipseGeometry Center="19,19" RadiusX="19" RadiusY="19" />
+                                                </Grid.Clip>
+                                                <Image Source="{Binding HatBackImage}"
+                                                       Width="{Binding HatWidth}"
+                                                       Margin="{Binding HatMargin}"
+                                                       Stretch="Uniform"
+                                                       HorizontalAlignment="Left"
+                                                       VerticalAlignment="Top" />
+                                                <Image Source="{Binding AvatarImage}"
+                                                       Width="40"
+                                                       Stretch="Uniform"
+                                                       HorizontalAlignment="Left"
+                                                       VerticalAlignment="Top"
+                                                       Margin="-9,6,0,0" />
+                                                <Image Source="{Binding SkinImage}"
+                                                       Width="{Binding SkinWidth}"
+                                                       Margin="{Binding SkinMargin}"
+                                                       Stretch="Uniform"
+                                                       HorizontalAlignment="Left"
+                                                       VerticalAlignment="Top" />
+                                            </Grid>
+                                            <Image Source="{Binding VisorImage}"
+                                                   Width="{Binding VisorWidth}"
+                                                   Margin="{Binding VisorMargin}"
+                                                   Stretch="Uniform"
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Top" />
+                                            <Image Source="{Binding HatFrontImage}"
+                                                   Width="{Binding HatWidth}"
+                                                   Margin="{Binding HatMargin}"
+                                                   Stretch="Uniform"
+                                                   HorizontalAlignment="Left"
+                                                   VerticalAlignment="Top" />
+                                        </Grid>
+                                    </Grid>
+                                    <TextBlock Text="{Binding Name}"
+                                               FontSize="10"
+                                               Foreground="White"
+                                               TextAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               Width="54" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <Grid Grid.Row="1"
+                      Width="180"
+                      HorizontalAlignment="Center"
+                      Margin="0,0,0,18">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0"
+                            Style="{StaticResource TitleIconButton}"
+                            Width="48"
+                            Height="48">
+                        <Viewbox Width="34" Height="34">
+                            <Canvas Width="24" Height="24">
+                                <Path Fill="White"
+                                      Data="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21C9.5,20.77 9.5,20.14 9.5,19.31C6.73,19.91 6.14,17.97 6.14,17.97C5.68,16.81 5.03,16.5 5.03,16.5C4.12,15.88 5.1,15.9 5.1,15.9C6.1,15.97 6.63,16.93 6.63,16.93C7.5,18.45 8.97,18 9.54,17.76C9.63,17.11 9.89,16.67 10.17,16.42C7.95,16.17 5.62,15.31 5.62,11.5C5.62,10.39 6,9.5 6.65,8.79C6.55,8.54 6.2,7.5 6.75,6.15C6.75,6.15 7.59,5.88 9.5,7.17C10.29,6.95 11.15,6.84 12,6.84C12.85,6.84 13.71,6.95 14.5,7.17C16.41,5.88 17.25,6.15 17.25,6.15C17.8,7.5 17.45,8.54 17.35,8.79C18,9.5 18.38,10.39 18.38,11.5C18.38,15.32 16.04,16.16 13.81,16.41C14.17,16.72 14.5,17.33 14.5,18.26C14.5,19.6 14.5,20.68 14.5,21C14.5,21.27 14.66,21.59 15.17,21.5C19.14,20.16 22,16.42 22,12A10,10 0 0,0 12,2Z" />
+                            </Canvas>
+                        </Viewbox>
+                    </Button>
+                    <Button Grid.Column="1"
+                            Style="{StaticResource TitleIconButton}"
+                            Width="48"
+                            Height="48">
+                        <Viewbox Width="34" Height="34">
+                            <Canvas Width="245" Height="240">
+                                <Path Fill="#7289DA"
+                                      Data="M104.4 103.9c-5.7 0-10.2 5-10.2 11.1s4.6 11.1 10.2 11.1c5.7 0 10.2-5 10.2-11.1.1-6.1-4.5-11.1-10.2-11.1zM140.9 103.9c-5.7 0-10.2 5-10.2 11.1s4.6 11.1 10.2 11.1c5.7 0 10.2-5 10.2-11.1s-4.5-11.1-10.2-11.1z" />
+                                <Path Fill="#7289DA"
+                                      Data="M189.5 20h-134C44.2 20 35 29.2 35 40.6v135.2c0 11.4 9.2 20.6 20.5 20.6h113.4l-5.3-18.5 12.8 11.9 12.1 11.2 21.5 19V40.6c0-11.4-9.2-20.6-20.5-20.6zm-38.6 130.6s-3.6-4.3-6.6-8.1c13.1-3.7 18.1-11.9 18.1-11.9-4.1 2.7-8 4.6-11.5 5.9-5 2.1-9.8 3.5-14.5 4.3-9.6 1.8-18.4 1.3-25.9-.1-5.7-1.1-10.6-2.7-14.7-4.3-2.3-.9-4.8-2-7.3-3.4-.3-.2-.6-.3-.9-.5-.2-.1-.3-.2-.4-.3-1.8-1-2.8-1.7-2.8-1.7s4.8 8 17.5 11.8c-3 3.8-6.7 8.3-6.7 8.3-22.1-.7-30.5-15.2-30.5-15.2 0-32.2 14.4-58.3 14.4-58.3 14.4-10.8 28.1-10.5 28.1-10.5l1 1.2c-18 5.2-26.3 13.1-26.3 13.1s2.2-1.2 5.9-2.9c10.7-4.7 19.2-6 22.7-6.3.6-.1 1.1-.2 1.7-.2 6.1-.8 13-1 20.2-.2 9.5 1.1 19.7 3.9 30.1 9.6 0 0-7.9-7.5-24.9-12.7l1.4-1.6s13.7-.3 28.1 10.5c0 0 14.4 26.1 14.4 58.3 0 0-8.5 14.5-30.6 15.2z" />
+                            </Canvas>
+                        </Viewbox>
+                    </Button>
+                </Grid>
+            </Grid>
+
+            <Border Background="#EE1B1A20"
+                    Padding="12,0,12,0"
+                    Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="52" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <TextBlock Text="設定"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                        <Button Content="←"
+                                Command="{Binding ToggleSettingsCommand}"
+                                Style="{StaticResource TitleIconButton}"
+                                Width="34"
+                                Height="34"
+                                FontSize="24"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center" />
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <Separator Background="#333139" Margin="0,0,0,12" />
+
+                            <TextBlock Text="ロビー設定"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="{Binding Settings.LocalLobbySettings.MaxDistance, StringFormat=ボイスの距離: {0:0.0}}"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,4,0,2" />
+                            <Slider Minimum="0.5"
+                                    Maximum="20"
+                                    Value="{Binding Settings.LocalLobbySettings.MaxDistance}" />
+                            <Separator Background="#333139" />
+                            <CheckBox Content="ロビーを公開する" IsChecked="{Binding Settings.LocalLobbySettings.PublicLobbyOn}" />
+                            <Button Content="ロビー情報の変更"
+                                    IsEnabled="{Binding Settings.LocalLobbySettings.PublicLobbyOn}"
+                                    Style="{StaticResource OutlinedActionButton}"
+                                    HorizontalAlignment="Stretch"
+                                    Margin="0,0,0,8" />
+                            <CheckBox Content="壁越しで音声をブロック" IsChecked="{Binding Settings.LocalLobbySettings.WallsBlockAudio}" />
+                            <Separator Background="#333139" />
+                            <CheckBox Content="視野内のプレイヤーの声だけが聞こえる" IsChecked="{Binding Settings.LocalLobbySettings.VisionHearing}" />
+                            <Separator Background="#333139" />
+                            <CheckBox Content="インポスターが幽霊の声も聞こえる" IsChecked="{Binding Settings.LocalLobbySettings.Haunting}" />
+                            <Separator Background="#333139" />
+                            <CheckBox Content="第三陣営が幽霊の声も聞こえる" IsChecked="{Binding Settings.LocalLobbySettings.ThirdPartyHaunting}" />
+                            <Separator Background="#333139" />
+                            <CheckBox Content="ボイスエフェクトを有効化" IsChecked="{Binding Settings.LocalLobbySettings.VoiceEffectEnabled}" />
+                            <Separator Background="#333139" />
+                            <CheckBox Content="インポスターはベント内にいても声が聞こえる" IsChecked="{Binding Settings.LocalLobbySettings.HearImpostorsInVents}" />
+                            <Separator Background="#333139" />
+                            <CheckBox Content="インポスター同士でベント内で会話ができる" IsChecked="{Binding Settings.LocalLobbySettings.ImpostorsHearImpostorsInVent}" />
+                            <Separator Background="#333139" />
+                            <CheckBox Content="コミュサボタージュで音声を無効化" IsChecked="{Binding Settings.LocalLobbySettings.CommsSabotage}" />
+                            <Separator Background="#333139" />
+                            <CheckBox Content="カメラ越しに声が聞こえる" IsChecked="{Binding Settings.LocalLobbySettings.HearThroughCameras}" />
+                            <Separator Background="#333139" />
+                            <CheckBox Content="インポスターラジオ" IsChecked="{Binding Settings.LocalLobbySettings.ImpostorRadioEnabled}" />
+                            <Separator Background="#333139" />
+                            <CheckBox Content="幽霊だけが話す/聞くことが可能" IsChecked="{Binding Settings.LocalLobbySettings.DeadOnly}" />
+                            <Separator Background="#333139" />
+                            <CheckBox Content="ミーティング/ロビーのみ" IsChecked="{Binding Settings.LocalLobbySettings.MeetingGhostOnly}" />
+
+                            <TextBlock Text="オーディオ"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,22,0,10" />
+                            <TextBlock Text="マイク" Foreground="{StaticResource SubtleTextBrush}" />
+                            <ComboBox ItemsSource="{Binding Microphones}"
+                                      DisplayMemberPath="Name"
+                                      SelectedValuePath="Id"
+                                      SelectedValue="{Binding SelectedMicrophone, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="False"
+                                      MaxDropDownHeight="180" />
+                            <ProgressBar Minimum="0"
+                                         Maximum="100"
+                                         Height="8"
+                                         Value="{Binding MicrophoneLevel, Mode=OneWay}"
+                                         Foreground="{StaticResource PrimaryBrush}"
+                                         Background="#3A3840"
+                                         Margin="24,2,24,14" />
+                            <TextBlock Text="スピーカー" Foreground="{StaticResource SubtleTextBrush}" />
+                            <ComboBox ItemsSource="{Binding Speakers}"
+                                      DisplayMemberPath="Name"
+                                      SelectedValuePath="Id"
+                                      SelectedValue="{Binding SelectedSpeaker, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="False"
+                                      MaxDropDownHeight="180" />
+                            <Button Content="スピーカーテスト"
+                                    Command="{Binding TestSpeakerCommand}"
+                                    Style="{StaticResource HotPinkButton}"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,0,12" />
+                            <TextBlock Text="ボイスエフェクトの強さ"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center" />
+                            <Slider Minimum="0" Maximum="200" Value="{Binding Settings.VoiceEffectStrength}" />
+                            <Button Content="{Binding VoiceEffectTestButtonText}"
+                                    Command="{Binding TestVoiceEffectCommand}"
+                                    Style="{StaticResource HotPinkButton}"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,6,0,12" />
+                            <RadioButton Content="常に有効" GroupName="PushMode" IsChecked="True" />
+                            <RadioButton Content="押して話す" GroupName="PushMode" />
+                            <RadioButton Content="押してミュート" GroupName="PushMode" />
+                            <Separator Background="#333139" />
+                            <TextBlock Text="マイク音量" Margin="0,8,0,0" />
+                            <CheckBox Content="" IsChecked="{Binding Settings.MicrophoneGainEnabled}" />
+                            <Slider Minimum="0" Maximum="200" Value="{Binding Settings.MicrophoneGain}" />
+                            <TextBlock Text="マイク諢溷ｺｦ" />
+                            <CheckBox Content="" IsChecked="{Binding Settings.MicSensitivityEnabled}" />
+                            <Slider Minimum="0" Maximum="1" Value="{Binding Settings.MicSensitivity}" />
+                            <Separator Background="#333139" />
+                            <TextBlock Text="マスターボリューム" Margin="0,8,0,0" />
+                            <Slider Minimum="0" Maximum="200" Value="{Binding Settings.MasterVolume}" />
+                            <TextBlock Text="幽霊クルーの音量" />
+                            <Slider Minimum="0" Maximum="200" Value="{Binding Settings.CrewVolumeAsGhost}" />
+                            <TextBlock Text="インポスター時の幽霊の音量" />
+                            <Slider Minimum="0" Maximum="200" Value="{Binding Settings.GhostVolumeAsImpostor}" />
+
+                            <TextBlock Text="キーボードショートカット"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,20,0,8" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="押して話す" Foreground="{StaticResource SubtleTextBrush}" />
+                                    <TextBox Text="{Binding Settings.PushToTalkShortcut, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="ミュート" Foreground="{StaticResource SubtleTextBrush}" />
+                                    <TextBox Text="{Binding Settings.MuteShortcut, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="インポスターラジオ" Foreground="{StaticResource SubtleTextBrush}" />
+                                    <TextBox Text="{Binding Settings.ImpostorRadioShortcut, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="スピーカーミュート" Foreground="{StaticResource SubtleTextBrush}" />
+                                    <TextBox Text="{Binding Settings.DeafenShortcut, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                            </Grid>
+                            <Separator Background="#333139" />
+
+                            <TextBlock Text="オーバーレイ"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,14,0,8" />
+                            <CheckBox Content="最前面に表示" IsChecked="{Binding Settings.AlwaysOnTop}" />
+                            <CheckBox Content="オーバーレイを有効化" IsChecked="{Binding Settings.EnableOverlay}" />
+                            <CheckBox Content="コンパクトなオーバーレイ" IsChecked="{Binding Settings.CompactOverlay}" />
+                            <CheckBox Content="隴ｰ隲悶・オーバーレイ陦ｨ遉ｺ" IsChecked="{Binding Settings.MeetingOverlay}" />
+                            <TextBlock Text="オーバーレイの位置" Foreground="{StaticResource SubtleTextBrush}" />
+                            <ComboBox Text="{Binding Settings.OverlayPosition, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="True">
+                                <ComboBoxItem Content="右" />
+                                <ComboBoxItem Content="左" />
+                            </ComboBox>
+
+                            <TextBlock Text="詳細設定"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,18,0,8" />
+                            <CheckBox Content="NATの修正" IsChecked="{Binding Settings.NatFix}" />
+                            <Button Content="ボイスサーバーの変更"
+                                    Style="{StaticResource HotPinkButton}"
+                                    Command="{Binding SaveCommand}"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,0,0,12" />
+
+                            <TextBlock Text="ベータ/デバッグ"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,10,0,8" />
+                            <CheckBox Content="モバイルホスト" IsChecked="{Binding Settings.MobileHost}" />
+                            <CheckBox Content="音声アクティビティ検出" IsChecked="{Binding Settings.VadEnabled}" />
+                            <CheckBox Content="ハードウェア アクセラレーション" IsChecked="{Binding Settings.HardwareAcceleration}" />
+                            <CheckBox Content="エコーキャンセラー" IsChecked="{Binding Settings.EchoCancellation}" />
+                            <CheckBox Content="立体音響" IsChecked="{Binding Settings.EnableSpatialAudio}" />
+                            <CheckBox Content="ノイズ防止" IsChecked="{Binding Settings.NoiseSuppression}" />
+                            <CheckBox Content="サンプルレートデバッグ" IsChecked="{Binding Settings.OldSampleDebug}" />
+                            <TextBlock Text="言語" Foreground="{StaticResource SubtleTextBrush}" />
+                            <ComboBox Text="{Binding Settings.Language, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="True">
+                                <ComboBoxItem Content="日本語" />
+                                <ComboBoxItem Content="English" />
+                            </ComboBox>
+
+                            <TextBlock Text="配信設定"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,18,0,8" />
+                            <CheckBox Content="ロビーコードの表示" IsChecked="{Binding Settings.HideCode}" />
+                            <CheckBox Content="OBS ブラウザーのオーバーレイ" IsChecked="{Binding Settings.ObsOverlay}" />
+
+                            <TextBlock Text="トラブルシューティング"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,18,0,8" />
+                            <Button Content="デフォルトに戻す"
+                                    Style="{StaticResource HotPinkButton}"
+                                    HorizontalAlignment="Left"
+                                    Margin="0,0,0,22" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
+
+
