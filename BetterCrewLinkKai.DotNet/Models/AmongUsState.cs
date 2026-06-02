@@ -21,6 +21,18 @@ public enum MapType
     Submerged = 105
 }
 
+public enum CameraLocation
+{
+    East = 0,
+    Central = 1,
+    Northeast = 2,
+    South = 3,
+    SouthWest = 4,
+    NorthWest = 5,
+    Skeld = 6,
+    None = 7
+}
+
 public sealed class Player
 {
     public int Id { get; set; }
@@ -83,6 +95,10 @@ public sealed class AmongUsState
     public int MaxPlayers { get; set; } = 15;
 
     public MapType Map { get; set; } = MapType.Unknown;
+
+    public CameraLocation CurrentCamera { get; set; } = CameraLocation.None;
+
+    public List<int> ClosedDoors { get; set; } = [];
 }
 
 public sealed class PlayerColorPair

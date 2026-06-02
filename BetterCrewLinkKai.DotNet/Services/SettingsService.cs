@@ -1,4 +1,5 @@
 using System.IO;
+using System.Security.Cryptography;
 using System.Text.Json;
 using BetterCrewLinkKai.DotNet.Models;
 
@@ -51,6 +52,11 @@ public sealed class SettingsService
         settings.LocalLobbySettings ??= new LobbySettings();
         settings.CustomPlatforms ??= [];
         settings.PlayerConfigMap ??= [];
+        if (string.IsNullOrWhiteSpace(settings.ObsSecret))
+        {
+            settings.ObsSecret = Convert.ToHexString(RandomNumberGenerator.GetBytes(12)).ToLowerInvariant();
+        }
+
         return settings;
     }
 }

@@ -4,7 +4,9 @@ namespace BetterCrewLinkKai.DotNet.Services;
 
 public sealed class VoiceMixService
 {
-    public IReadOnlyDictionary<int, PlayerVoiceMix> Calculate(AmongUsState state, AppSettings settings)
+    private static readonly VoiceCollisionService CollisionService = new();
+
+    public IReadOnlyDictionary<int, PlayerVoiceMix> Calculate(AmongUsState state, AppSettings settings, int impostorRadioClientId = -1)
     {
         var result = new Dictionary<int, PlayerVoiceMix>();
         var me = state.Players.FirstOrDefault(static player => player.IsLocal);
@@ -15,13 +17,13 @@ public sealed class VoiceMixService
 
         foreach (var other in state.Players.Where(static player => !player.IsLocal && !player.Disconnected))
         {
-            result[other.ClientId] = CalculatePlayer(state, settings, me, other);
+            result[other.ClientId] = CalculatePlayer(state, settings, me, other, impostorRadioClientId);
         }
 
         return result;
     }
 
-    private static PlayerVoiceMix CalculatePlayer(AmongUsState state, AppSettings settings, Player me, Player other)
+    private static PlayerVoiceMix CalculatePlayer(AmongUsState state, AppSettings settings, Player me, Player other, int impostorRadioClientId)
     {
         var lobby = settings.LocalLobbySettings;
         var volume = state.GameState switch
@@ -61,7 +63,18 @@ public sealed class VoiceMixService
                 return Muted(other, "other-in-vent");
             }
 
-            if (me.IsImpostor && other.IsImpostor && lobby.ImpostorRadioEnabled)
+            if (lobby.WallsBlockAudio &&
+                !me.IsDead &&
+                CollisionService.PoseCollide(me, other, state.Map, state.ClosedDoors))
+            {
+                isMuffled = true;
+                reason = "wall-collision";
+            }
+
+            if (me.IsImpostor &&
+                other.IsImpostor &&
+                lobby.ImpostorRadioEnabled &&
+                other.ClientId == impostorRadioClientId)
             {
                 skipDistanceCheck = true;
                 isMuffled = true;
@@ -119,7 +132,25 @@ public sealed class VoiceMixService
         var distance = Math.Sqrt((panX * panX) + (panY * panY));
         if (!skipDistanceCheck && distance > lobby.MaxDistance)
         {
-            return Muted(other, "out-of-range");
+            if (lobby.HearThroughCameras &&
+                state.GameState == GameState.Tasks &&
+                CollisionService.TryGetCameraPan(other, state.Map, state.CurrentCamera, out var cameraPanX, out var cameraPanY))
+            {
+                panX = cameraPanX;
+                panY = cameraPanY;
+                distance = Math.Sqrt((panX * panX) + (panY * panY));
+                isMuffled = true;
+                reason = "camera";
+            }
+
+            if (distance > lobby.MaxDistance)
+            {
+                return Muted(other, "out-of-range");
+            }
+        }
+        else if (!skipDistanceCheck && reason == "wall-collision")
+        {
+            return Muted(other, "wall-collision");
         }
 
         if (!settings.EnableSpatialAudio || skipDistanceCheck)
@@ -152,6 +183,7 @@ public sealed class VoiceMixService
             IsMuffled = isMuffled,
             UsesGhostReverb = usesGhostReverb,
             UsesVoiceEffect = usesVoiceEffect,
+            VoiceEffectStrength = settings.VoiceEffectStrength,
             Reason = reason
         };
     }

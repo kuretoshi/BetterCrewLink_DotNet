@@ -14,6 +14,19 @@
 
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
         <vm:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
+        <vm:EnumBooleanConverter x:Key="EnumBooleanConverter" />
+        <vm:BooleanToBrushConverter x:Key="MutedIconBrushConverter"
+                                    FalseBrush="White"
+                                    TrueBrush="#CE93D8" />
+        <vm:BooleanToBrushConverter x:Key="DeafenedIconBrushConverter"
+                                    FalseBrush="White"
+                                    TrueBrush="#CE93D8" />
+        <vm:BooleanToGeometryConverter x:Key="MicIconGeometryConverter"
+                                       FalseData="M12 14C13.66 14 15 12.66 15 11V5C15 3.34 13.66 2 12 2S9 3.34 9 5V11C9 12.66 10.34 14 12 14ZM17.3 11C17.3 14 14.76 16.1 12 16.1S6.7 14 6.7 11H5C5 14.41 7.72 17.23 11 17.72V21H13V17.72C16.28 17.24 19 14.42 19 11H17.3Z"
+                                       TrueData="M19 5L5 19L6.4 20.4L20.4 6.4L19 5ZM12 14C12.38 14 12.74 13.93 13.08 13.8L15 11.88V5C15 3.34 13.66 2 12 2S9 3.34 9 5V11C9 11.38 9.07 11.74 9.2 12.08L11.92 9.36L13 8.28V11C13 11.55 12.55 12 12 12C11.86 12 11.73 11.97 11.61 11.92L10.15 13.38C10.67 13.77 11.31 14 12 14ZM17.3 11C17.3 11.35 17.26 11.69 17.18 12.01L15.2 13.99C14.27 15.29 12.98 16.1 12 16.1C11.34 16.1 10.71 15.98 10.13 15.77L8.64 17.26C9.36 17.53 10.16 17.7 11 17.82V21H13V17.72C16.28 17.24 19 14.42 19 11H17.3ZM6.7 11H5C5 12.24 5.36 13.4 5.97 14.38L7.22 13.13C6.89 12.5 6.7 11.78 6.7 11Z" />
+        <vm:BooleanToGeometryConverter x:Key="SpeakerIconGeometryConverter"
+                                       FalseData="M3 9V15H7L12 20V4L7 9H3ZM16.5 12C16.5 10.23 15.5 8.71 14 7.97V16.02C15.48 15.29 16.5 13.76 16.5 12ZM14 3.23V5.29C16.89 6.15 19 8.83 19 12S16.89 17.85 14 18.71V20.77C18.01 19.86 21 16.28 21 12S18.01 4.14 14 3.23Z"
+                                       TrueData="M3 9V15H7L12 20V11.4L19 4.4L17.6 3L4.2 16.4L5.6 17.8L8.4 15H7L12 20V11.4L13.5 9.9V16.02C14.16 15.69 14.72 15.18 15.24 14.55L16.72 13.07C16.89 12.72 17 12.37 17 12C17 11.48 16.86 10.98 16.62 10.54L19.7 7.46C20.53 8.78 21 10.32 21 12C21 16.28 18.01 19.86 14 20.77V18.71C16.89 17.85 19 15.17 19 12C19 10.88 18.74 9.82 18.27 8.88L15.04 12.11C15.03 12.07 15.02 12.04 15 12V7.97C15.42 8.18 15.8 8.48 16.12 8.83L12 12.95V4L7 9H3Z" />
 
         <Style TargetType="Window">
             <Setter Property="Background" Value="{StaticResource AppBackgroundBrush}" />
@@ -36,6 +49,53 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="FontSize" Value="14" />
             <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style x:Key="SettingsScrollBarThumb" TargetType="{x:Type Thumb}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Thumb}">
+                        <Border Width="6"
+                                Margin="2,0"
+                                Background="#6B6670"
+                                CornerRadius="3" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SettingsScrollBar" TargetType="{x:Type ScrollBar}">
+            <Setter Property="Width" Value="10" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ScrollBar}">
+                        <Grid Background="{TemplateBinding Background}"
+                              Width="{TemplateBinding Width}">
+                            <Track x:Name="PART_Track"
+                                   IsDirectionReversed="True"
+                                   Maximum="{TemplateBinding Maximum}"
+                                   Minimum="{TemplateBinding Minimum}"
+                                   Value="{TemplateBinding Value}"
+                                   ViewportSize="{TemplateBinding ViewportSize}">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static ScrollBar.PageUpCommand}"
+                                                  Opacity="0"
+                                                  Focusable="False" />
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource SettingsScrollBarThumb}" />
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="{x:Static ScrollBar.PageDownCommand}"
+                                                  Opacity="0"
+                                                  Focusable="False" />
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="LaunchButton" TargetType="Button">

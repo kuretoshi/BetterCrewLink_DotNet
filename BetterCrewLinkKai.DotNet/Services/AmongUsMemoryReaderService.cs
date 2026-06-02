@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -182,6 +182,10 @@ public sealed class AmongUsMemoryReaderService : IDisposable
 
         var (map, maxPlayers) = shouldReadSession ? currentContext.ReadGameOptions() : (MapType.Unknown, 15);
         var currentServer = shouldReadSession ? currentContext.ReadCurrentServer() : string.Empty;
+        var localPlayer = players.FirstOrDefault(static player => player.IsLocal);
+        var taskEnvironment = shouldReadSession && effectiveGameState == GameState.Tasks
+            ? currentContext.ReadTaskEnvironment(map, localPlayer)
+            : TaskEnvironment.Empty;
 
         return new AmongUsState
         {
@@ -195,7 +199,10 @@ public sealed class AmongUsMemoryReaderService : IDisposable
             IsHost = hostId != 0 && hostId == clientId,
             CurrentServer = currentServer,
             MaxPlayers = maxPlayers,
-            Map = map
+            Map = map,
+            CommsSabotaged = taskEnvironment.CommsSabotaged,
+            CurrentCamera = taskEnvironment.CurrentCamera,
+            ClosedDoors = taskEnvironment.ClosedDoors
         };
     }
 
@@ -237,7 +244,7 @@ public sealed class AmongUsMemoryReaderService : IDisposable
 
     private static string BuildSessionSignature(AmongUsState state)
     {
-        return $"{state.LobbyCodeInt}:{state.Map}:{state.MaxPlayers}:{state.CurrentServer}:{state.IsHost}";
+        return $"{state.LobbyCodeInt}:{state.Map}:{state.MaxPlayers}:{state.CurrentServer}:{state.IsHost}:{state.CommsSabotaged}:{state.CurrentCamera}:{string.Join(',', state.ClosedDoors)}";
     }
 
     private static Player? ParsePlayer(ReaderContext context, long playerDataAddress, int localClientId)
@@ -422,6 +429,12 @@ public sealed class AmongUsMemoryReaderService : IDisposable
         var gameData = context.FindPattern(GetSignature(signatures.GetProperty("gameData")));
         var palette = context.FindPattern(GetSignature(signatures.GetProperty("palette")));
         var playerControl = context.FindPattern(GetSignature(signatures.GetProperty("playerControl")));
+        var shipStatus = signatures.TryGetProperty("shipStatus", out var shipStatusSignature)
+            ? context.FindPattern(GetSignature(shipStatusSignature))
+            : 0;
+        var miniGame = signatures.TryGetProperty("miniGame", out var miniGameSignature)
+            ? context.FindPattern(GetSignature(miniGameSignature))
+            : 0;
         var gameOptionsBase = playerControl;
         if (root.TryGetProperty("newGameOptions", out var newGameOptionsElement) &&
             newGameOptionsElement.GetBoolean() &&
@@ -450,6 +463,18 @@ public sealed class AmongUsMemoryReaderService : IDisposable
             Palette = ReplaceFirst(GetIntArray(root.GetProperty("palette")), palette),
             PalettePlayerColor = GetIntArray(root.GetProperty("palette_playercolor")),
             PaletteShadowColor = GetIntArray(root.GetProperty("palette_shadowColor")),
+            ShipStatus = TryReplaceFirst(root, "shipStatus", shipStatus),
+            ShipStatusSystems = TryGetIntArray(root, "shipStatus_systems"),
+            ShipStatusAllDoors = TryGetIntArray(root, "shipstatus_allDoors"),
+            DoorIsOpen = root.TryGetProperty("door_isOpen", out var doorIsOpen) ? doorIsOpen.GetInt32() : 0,
+            DeconDoorUpperOpen = TryGetIntArray(root, "deconDoorUpperOpen"),
+            DeconDoorLowerOpen = TryGetIntArray(root, "deconDoorLowerOpen"),
+            HqHudSystemTypeCompletedConsoles = TryGetIntArray(root, "hqHudSystemType_CompletedConsoles"),
+            HudOverrideSystemTypeIsActive = TryGetIntArray(root, "HudOverrideSystemType_isActive"),
+            MiniGame = TryReplaceFirst(root, "miniGame", miniGame),
+            PlanetSurveillanceMinigameCurrentCamera = TryGetIntArray(root, "planetSurveillanceMinigame_currentCamera"),
+            PlanetSurveillanceMinigameCamerasCount = TryGetIntArray(root, "planetSurveillanceMinigame_camarasCount"),
+            SurveillanceMinigameFilteredRoomsCount = TryGetIntArray(root, "surveillanceMinigame_FilteredRoomsCount"),
             GameOptionsData = ReplaceFirst(GetIntArray(root.GetProperty("gameoptionsData")), gameOptionsBase),
             GameOptionsMapId = GetIntArray(root.GetProperty("gameOptions_MapId")),
             GameOptionsMaxPlayers = GetIntArray(root.GetProperty("gameOptions_MaxPLayers")),
@@ -513,8 +538,23 @@ public sealed class AmongUsMemoryReaderService : IDisposable
     private static int[] ReplaceFirst(int[] values, long firstValue)
     {
         var result = values.ToArray();
+        if (result.Length == 0)
+        {
+            return result;
+        }
+
         result[0] = unchecked((int)firstValue);
         return result;
+    }
+
+    private static int[] TryReplaceFirst(JsonElement root, string propertyName, long firstValue)
+    {
+        return root.TryGetProperty(propertyName, out var property) ? ReplaceFirst(GetIntArray(property), firstValue) : [];
+    }
+
+    private static int[] TryGetIntArray(JsonElement root, string propertyName)
+    {
+        return root.TryGetProperty(propertyName, out var property) ? GetIntArray(property) : [];
     }
 
     private static int[] GetIntArray(JsonElement element)
@@ -541,6 +581,11 @@ public sealed class AmongUsMemoryReaderService : IDisposable
 
     private sealed record Signature(string Pattern, int PatternOffset, int AddressOffset);
 
+    private sealed record TaskEnvironment(bool CommsSabotaged, CameraLocation CurrentCamera, List<int> ClosedDoors)
+    {
+        public static TaskEnvironment Empty { get; } = new(false, CameraLocation.None, []);
+    }
+
     private sealed class ReaderOffsets
     {
         public int[] InnerNetClientBase { get; init; } = [];
@@ -555,6 +600,18 @@ public sealed class AmongUsMemoryReaderService : IDisposable
         public int[] Palette { get; init; } = [];
         public int[] PalettePlayerColor { get; init; } = [];
         public int[] PaletteShadowColor { get; init; } = [];
+        public int[] ShipStatus { get; init; } = [];
+        public int[] ShipStatusSystems { get; init; } = [];
+        public int[] ShipStatusAllDoors { get; init; } = [];
+        public int DoorIsOpen { get; init; }
+        public int[] DeconDoorUpperOpen { get; init; } = [];
+        public int[] DeconDoorLowerOpen { get; init; } = [];
+        public int[] HqHudSystemTypeCompletedConsoles { get; init; } = [];
+        public int[] HudOverrideSystemTypeIsActive { get; init; } = [];
+        public int[] MiniGame { get; init; } = [];
+        public int[] PlanetSurveillanceMinigameCurrentCamera { get; init; } = [];
+        public int[] PlanetSurveillanceMinigameCamerasCount { get; init; } = [];
+        public int[] SurveillanceMinigameFilteredRoomsCount { get; init; } = [];
         public int[] GameOptionsData { get; init; } = [];
         public int[] GameOptionsMapId { get; init; } = [];
         public int[] GameOptionsMaxPlayers { get; init; } = [];
@@ -804,6 +861,171 @@ public sealed class AmongUsMemoryReaderService : IDisposable
             catch
             {
                 return string.Empty;
+            }
+        }
+
+        public TaskEnvironment ReadTaskEnvironment(MapType map, Player? localPlayer)
+        {
+            var closedDoors = new List<int>();
+            var commsSabotaged = false;
+            var currentCamera = CameraLocation.None;
+
+            try
+            {
+                var shipPtr = Offsets.ShipStatus.Length == 0 ? 0 : ReadPointer(GameAssemblyBase, Offsets.ShipStatus);
+                if (shipPtr == 0)
+                {
+                    return TaskEnvironment.Empty;
+                }
+
+                var systemsPtr = Offsets.ShipStatusSystems.Length == 0 ? 0 : ReadPointer(shipPtr, Offsets.ShipStatusSystems);
+                if (systemsPtr != 0)
+                {
+                    ReadDictionary(systemsPtr, 47, (keyAddress, valueAddress, _) =>
+                    {
+                        var key = ReadInt32(keyAddress);
+                        var value = ReadPointer(valueAddress);
+                        if (value == 0)
+                        {
+                            return;
+                        }
+
+                        if (key == 14)
+                        {
+                            commsSabotaged = ReadCommsSabotage(value, map);
+                        }
+                        else if (key == 18 && map == MapType.MiraHq)
+                        {
+                            var lowerDoorOpen = Offsets.DeconDoorLowerOpen.Length > 0 && ReadInt32(value, Offsets.DeconDoorLowerOpen) != 0;
+                            var upperDoorOpen = Offsets.DeconDoorUpperOpen.Length > 0 && ReadInt32(value, Offsets.DeconDoorUpperOpen) != 0;
+                            if (!lowerDoorOpen)
+                            {
+                                closedDoors.Add(0);
+                            }
+
+                            if (!upperDoorOpen)
+                            {
+                                closedDoors.Add(1);
+                            }
+                        }
+                    });
+                }
+
+                currentCamera = ReadCurrentCamera(map, localPlayer);
+
+                if (map != MapType.MiraHq)
+                {
+                    ReadClosedDoors(shipPtr, closedDoors);
+                }
+            }
+            catch
+            {
+                return new TaskEnvironment(commsSabotaged, currentCamera, closedDoors);
+            }
+
+            return new TaskEnvironment(commsSabotaged, currentCamera, closedDoors);
+        }
+
+        private bool ReadCommsSabotage(long systemValuePtr, MapType map)
+        {
+            try
+            {
+                return map switch
+                {
+                    MapType.Airship or MapType.Polus or MapType.TheSkeld or MapType.Submerged =>
+                        Offsets.HudOverrideSystemTypeIsActive.Length > 0 &&
+                        ReadUInt32(systemValuePtr, Offsets.HudOverrideSystemTypeIsActive) == 1,
+                    MapType.Fungle or MapType.MiraHq =>
+                        Offsets.HqHudSystemTypeCompletedConsoles.Length > 0 &&
+                        ReadUInt32(systemValuePtr, Offsets.HqHudSystemTypeCompletedConsoles) < 2,
+                    _ => false
+                };
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private CameraLocation ReadCurrentCamera(MapType map, Player? localPlayer)
+        {
+            try
+            {
+                if (Offsets.MiniGame.Length == 0)
+                {
+                    return CameraLocation.None;
+                }
+
+                var minigamePtr = ReadPointer(GameAssemblyBase, Offsets.MiniGame);
+                var minigameCachePtr = minigamePtr == 0 || Offsets.ObjectCachePtr.Length == 0
+                    ? 0
+                    : ReadPointer(minigamePtr, Offsets.ObjectCachePtr);
+                if (minigameCachePtr == 0 || localPlayer is null)
+                {
+                    return CameraLocation.None;
+                }
+
+                if (map is MapType.Polus or MapType.Airship &&
+                    Offsets.PlanetSurveillanceMinigameCurrentCamera.Length > 0 &&
+                    Offsets.PlanetSurveillanceMinigameCamerasCount.Length > 0)
+                {
+                    var currentCameraId = ReadUInt32(minigamePtr, Offsets.PlanetSurveillanceMinigameCurrentCamera);
+                    var camerasCount = ReadUInt32(minigamePtr, Offsets.PlanetSurveillanceMinigameCamerasCount);
+                    return currentCameraId <= 5 && camerasCount == 6 ? (CameraLocation)currentCameraId : CameraLocation.None;
+                }
+
+                if (map == MapType.TheSkeld && Offsets.SurveillanceMinigameFilteredRoomsCount.Length > 0)
+                {
+                    var roomCount = ReadUInt32(minigamePtr, Offsets.SurveillanceMinigameFilteredRoomsCount);
+                    var dx = localPlayer.X - -12.9364;
+                    var dy = localPlayer.Y - -2.7928;
+                    return roomCount == 4 && Math.Sqrt((dx * dx) + (dy * dy)) < 0.6
+                        ? CameraLocation.Skeld
+                        : CameraLocation.None;
+                }
+            }
+            catch
+            {
+                return CameraLocation.None;
+            }
+
+            return CameraLocation.None;
+        }
+
+        private void ReadClosedDoors(long shipPtr, List<int> closedDoors)
+        {
+            try
+            {
+                if (Offsets.ShipStatusAllDoors.Length == 0 || Offsets.PlayerCount.Length == 0 || Offsets.DoorIsOpen == 0)
+                {
+                    return;
+                }
+
+                var allDoors = ReadPointer(shipPtr, Offsets.ShipStatusAllDoors);
+                if (allDoors == 0)
+                {
+                    return;
+                }
+
+                var doorCount = Math.Min(ReadInt32(allDoors, Offsets.PlayerCount), 16);
+                for (var doorIndex = 0; doorIndex < doorCount; doorIndex++)
+                {
+                    var door = ReadPointer(allDoors + Offsets.PlayerAddrPtr + (doorIndex * (Is64Bit ? 8 : 4)));
+                    if (door == 0)
+                    {
+                        continue;
+                    }
+
+                    var doorOpen = ReadInt32(door + Offsets.DoorIsOpen) == 1;
+                    if (!doorOpen)
+                    {
+                        closedDoors.Add(doorIndex);
+                    }
+                }
+            }
+            catch
+            {
+                // Doors are optional for voice mixing; keep the rest of the state readable.
             }
         }
 

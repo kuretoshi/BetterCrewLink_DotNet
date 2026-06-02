@@ -22,5 +22,7 @@ public sealed class PlayerVoiceMix
 
     public bool UsesVoiceEffect { get; init; }
 
+    public double VoiceEffectStrength { get; init; }
+
     public string Reason { get; init; } = string.Empty;
 }

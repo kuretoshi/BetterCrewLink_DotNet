@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 D:\VSCode\BetterCrewLink_DotNet\BetterCrewLinkKai.DotNet\App.xaml
-11407045341
+2-1820247613
 
-27-149003371
+41-364145065
 217-634271952
-MainWindow.xaml;
+MainWindow.xaml;OverlayWindow.xaml;
 
 False
 

@@ -34,3 +34,5 @@ D:\VSCode\BetterCrewLink_DotNet\BetterCrewLinkKai.DotNet\bin\Debug\net8.0-window
 D:\VSCode\BetterCrewLink_DotNet\BetterCrewLinkKai.DotNet\bin\Debug\net8.0-windows\SocketIO.Serializer.Core.dll
 D:\VSCode\BetterCrewLink_DotNet\BetterCrewLinkKai.DotNet\bin\Debug\net8.0-windows\SocketIO.Serializer.SystemTextJson.dll
 D:\VSCode\BetterCrewLink_DotNet\BetterCrewLinkKai.DotNet\bin\Debug\net8.0-windows\SocketIOClient.dll
+D:\VSCode\BetterCrewLink_DotNet\BetterCrewLinkKai.DotNet\obj\Debug\net8.0-windows\OverlayWindow.baml
+D:\VSCode\BetterCrewLink_DotNet\BetterCrewLinkKai.DotNet\obj\Debug\net8.0-windows\OverlayWindow.g.cs

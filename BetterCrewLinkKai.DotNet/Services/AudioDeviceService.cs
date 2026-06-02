@@ -1,4 +1,4 @@
-using BetterCrewLinkKai.DotNet.Models;
+﻿using BetterCrewLinkKai.DotNet.Models;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;

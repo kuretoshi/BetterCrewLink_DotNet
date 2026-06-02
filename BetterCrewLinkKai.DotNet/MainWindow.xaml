@@ -15,7 +15,7 @@
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         ResizeMode="NoResize"
-        Topmost="{Binding Settings.AlwaysOnTop}">
+        Topmost="{Binding AlwaysOnTop}">
     <Window.DataContext>
         <vm:MainWindowViewModel />
     </Window.DataContext>
@@ -225,6 +225,7 @@
                                Margin="-12,0,-12,10" />
                     <Button Content="公開ロビー"
                             Style="{StaticResource OutlinedActionButton}"
+                            Command="{Binding OpenPublicLobbyBrowserCommand}"
                             HorizontalAlignment="Center"
                             MinWidth="104"
                             Margin="0,0,0,0" />
@@ -250,9 +251,48 @@
                                   ClipToBounds="False">
                                 <Ellipse Width="78"
                                          Height="78"
-                                         Stroke="#2ECC71"
-                                         StrokeThickness="2"
-                                         Fill="#25232A" />
+                                         Stroke="{Binding LocalRingBrush}"
+                                         StrokeThickness="{Binding LocalRingThickness}"
+                                         Fill="#25232A">
+                                    <Ellipse.Effect>
+                                        <DropShadowEffect Color="#32FF7E"
+                                                          BlurRadius="16"
+                                                          ShadowDepth="0"
+                                                          Opacity="0" />
+                                    </Ellipse.Effect>
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding LocalIsTalking}" Value="True">
+                                                    <DataTrigger.EnterActions>
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <DoubleAnimation Storyboard.TargetProperty="(Ellipse.Effect).(DropShadowEffect.Opacity)"
+                                                                                 To="0.9"
+                                                                                 Duration="0:0:0.28" />
+                                                                <DoubleAnimation Storyboard.TargetProperty="(Ellipse.Effect).(DropShadowEffect.BlurRadius)"
+                                                                                 To="20"
+                                                                                 Duration="0:0:0.28" />
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </DataTrigger.EnterActions>
+                                                    <DataTrigger.ExitActions>
+                                                        <BeginStoryboard>
+                                                            <Storyboard>
+                                                                <DoubleAnimation Storyboard.TargetProperty="(Ellipse.Effect).(DropShadowEffect.Opacity)"
+                                                                                 To="0"
+                                                                                 Duration="0:0:0.55" />
+                                                                <DoubleAnimation Storyboard.TargetProperty="(Ellipse.Effect).(DropShadowEffect.BlurRadius)"
+                                                                                 To="16"
+                                                                                 Duration="0:0:0.55" />
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </DataTrigger.ExitActions>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
                                 <Grid Width="78"
                                       Height="78"
                                       ClipToBounds="True">
@@ -264,19 +304,35 @@
                                            Margin="{Binding LocalHatMargin}"
                                            Stretch="Uniform"
                                            HorizontalAlignment="Left"
-                                           VerticalAlignment="Top" />
+                                           VerticalAlignment="Top"
+                                           RenderTransformOrigin="0.5,0.5">
+                                        <Image.RenderTransform>
+                                            <TransformGroup>
+                                                <ScaleTransform ScaleX="2" ScaleY="2" />
+                                                <TranslateTransform X="12" Y="-22" />
+                                            </TransformGroup>
+                                        </Image.RenderTransform>
+                                    </Image>
                                     <Image Source="{Binding LocalAvatarImage}"
-                                           Width="82"
+                                           Width="78"
                                            Stretch="Uniform"
                                            HorizontalAlignment="Left"
                                            VerticalAlignment="Top"
-                                           Margin="-9,15,0,0" />
+                                           Margin="0" />
                                     <Image Source="{Binding LocalSkinImage}"
                                            Width="{Binding LocalSkinWidth}"
                                            Margin="{Binding LocalSkinMargin}"
                                            Stretch="Uniform"
                                            HorizontalAlignment="Left"
-                                           VerticalAlignment="Top" />
+                                           VerticalAlignment="Top"
+                                           RenderTransformOrigin="0.5,0.5">
+                                        <Image.RenderTransform>
+                                            <TransformGroup>
+                                                <ScaleTransform ScaleX="2" ScaleY="2" />
+                                                <TranslateTransform X="12" Y="-22" />
+                                            </TransformGroup>
+                                        </Image.RenderTransform>
+                                    </Image>
                                 </Grid>
                                 <Image Source="{Binding LocalVisorImage}"
                                        Width="{Binding LocalVisorWidth}"
@@ -289,7 +345,15 @@
                                        Margin="{Binding LocalHatMargin}"
                                        Stretch="Uniform"
                                        HorizontalAlignment="Left"
-                                       VerticalAlignment="Top" />
+                                       VerticalAlignment="Top"
+                                       RenderTransformOrigin="0.5,0.5">
+                                    <Image.RenderTransform>
+                                        <TransformGroup>
+                                            <ScaleTransform ScaleX="2" ScaleY="2" />
+                                            <TranslateTransform X="12" Y="-22" />
+                                        </TransformGroup>
+                                    </Image.RenderTransform>
+                                </Image>
                             </Grid>
                         </Grid>
 
@@ -302,7 +366,7 @@
                                     CornerRadius="4"
                                     Padding="6,4"
                                     HorizontalAlignment="Stretch">
-                                <TextBlock Text="{Binding CurrentLobbyCode}"
+                                <TextBlock Text="{Binding DisplayLobbyCode}"
                                            FontFamily="Source Code Pro, Consolas"
                                            FontSize="24"
                                            Foreground="White"
@@ -313,19 +377,52 @@
                         <StackPanel Grid.Column="2"
                                     VerticalAlignment="Center"
                                     HorizontalAlignment="Center">
-                            <Viewbox Width="18"
-                                     Height="18"
-                                     HorizontalAlignment="Center"
-                                     Margin="0,0,0,8">
-                                <Path Fill="White"
-                                      Data="M12 14C13.66 14 15 12.66 15 11V5C15 3.34 13.66 2 12 2S9 3.34 9 5V11C9 12.66 10.34 14 12 14ZM17.3 11C17.3 14 14.76 16.1 12 16.1S6.7 14 6.7 11H5C5 14.41 7.72 17.23 11 17.72V21H13V17.72C16.28 17.24 19 14.42 19 11H17.3Z" />
-                            </Viewbox>
-                            <Viewbox Width="18"
-                                     Height="18"
-                                     HorizontalAlignment="Center">
-                                <Path Fill="White"
-                                      Data="M3 9V15H7L12 20V4L7 9H3ZM16.5 12C16.5 10.23 15.5 8.71 14 7.97V16.02C15.48 15.29 16.5 13.76 16.5 12ZM14 3.23V5.29C16.89 6.15 19 8.83 19 12S16.89 17.85 14 18.71V20.77C18.01 19.86 21 16.28 21 12S18.01 4.14 14 3.23Z" />
-                            </Viewbox>
+                            <Button Command="{Binding ToggleMuteCommand}"
+                                    Style="{StaticResource TitleIconButton}"
+                                    Width="24"
+                                    Height="24"
+                                    ToolTip="マイクミュート">
+                                <Viewbox Width="18"
+                                         Height="18"
+                                         HorizontalAlignment="Center">
+                                    <Grid Width="24" Height="24">
+                                        <Path Fill="{Binding IsMuted, Converter={StaticResource MutedIconBrushConverter}}"
+                                              Data="M12 14C13.66 14 15 12.66 15 11V5C15 3.34 13.66 2 12 2S9 3.34 9 5V11C9 12.66 10.34 14 12 14ZM17.3 11C17.3 14 14.76 16.1 12 16.1S6.7 14 6.7 11H5C5 14.41 7.72 17.23 11 17.72V21H13V17.72C16.28 17.24 19 14.42 19 11H17.3Z" />
+                                        <Line X1="5"
+                                              Y1="5"
+                                              X2="19"
+                                              Y2="19"
+                                              Stroke="{Binding IsMuted, Converter={StaticResource MutedIconBrushConverter}}"
+                                              StrokeThickness="2.4"
+                                              StrokeStartLineCap="Round"
+                                              StrokeEndLineCap="Round"
+                                              Visibility="{Binding IsMuted, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    </Grid>
+                                </Viewbox>
+                            </Button>
+                            <Button Command="{Binding ToggleDeafenCommand}"
+                                    Style="{StaticResource TitleIconButton}"
+                                    Width="24"
+                                    Height="24"
+                                    ToolTip="スピーカーミュート">
+                                <Viewbox Width="18"
+                                         Height="18"
+                                         HorizontalAlignment="Center">
+                                    <Grid Width="24" Height="24">
+                                        <Path Fill="{Binding IsDeafened, Converter={StaticResource DeafenedIconBrushConverter}}"
+                                              Data="M3 9V15H7L12 20V4L7 9H3ZM16.5 12C16.5 10.23 15.5 8.71 14 7.97V16.02C15.48 15.29 16.5 13.76 16.5 12ZM14 3.23V5.29C16.89 6.15 19 8.83 19 12S16.89 17.85 14 18.71V20.77C18.01 19.86 21 16.28 21 12S18.01 4.14 14 3.23Z" />
+                                        <Line X1="5"
+                                              Y1="5"
+                                              X2="19"
+                                              Y2="19"
+                                              Stroke="{Binding IsDeafened, Converter={StaticResource DeafenedIconBrushConverter}}"
+                                              StrokeThickness="2.4"
+                                              StrokeStartLineCap="Round"
+                                              StrokeEndLineCap="Round"
+                                              Visibility="{Binding IsDeafened, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    </Grid>
+                                </Viewbox>
+                            </Button>
                         </StackPanel>
                     </Grid>
 
@@ -345,6 +442,40 @@
                                             Margin="2"
                                             HorizontalAlignment="Center"
                                             Opacity="{Binding Opacity}">
+                                    <StackPanel.ToolTip>
+                                        <ToolTip>
+                                            <Border Background="#1B1820"
+                                                    BorderBrush="#55505D"
+                                                    BorderThickness="1"
+                                                    Padding="8"
+                                                    Width="180">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Name}"
+                                                               FontWeight="Bold"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Margin="0,0,0,6" />
+                                                    <Grid Margin="0,0,0,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <CheckBox Content="ミュート"
+                                                                  IsChecked="{Binding IsPlayerMuted, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                  Margin="0" />
+                                                        <TextBlock Grid.Column="1"
+                                                                   Text="{Binding EffectiveVolumeText}"
+                                                                   Foreground="{StaticResource SubtleTextBrush}"
+                                                                   HorizontalAlignment="Right"
+                                                                   VerticalAlignment="Center" />
+                                                    </Grid>
+                                                    <Slider Minimum="0"
+                                                            Maximum="200"
+                                                            Value="{Binding VolumePercent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                            Margin="0" />
+                                                </StackPanel>
+                                            </Border>
+                                        </ToolTip>
+                                    </StackPanel.ToolTip>
                                     <Grid Width="44" Height="44" HorizontalAlignment="Center">
                                         <Grid Width="38"
                                               Height="38"
@@ -353,9 +484,48 @@
                                               ClipToBounds="False">
                                             <Ellipse Width="38"
                                                      Height="38"
-                                                     Stroke="#2ECC71"
-                                                     StrokeThickness="1.5"
-                                                     Fill="#25232A" />
+                                                     Stroke="{Binding RingBrush}"
+                                                     StrokeThickness="{Binding RingThickness}"
+                                                     Fill="#25232A">
+                                                <Ellipse.Effect>
+                                                    <DropShadowEffect Color="#32FF7E"
+                                                                      BlurRadius="12"
+                                                                      ShadowDepth="0"
+                                                                      Opacity="0" />
+                                                </Ellipse.Effect>
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsTalking}" Value="True">
+                                                                <DataTrigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation Storyboard.TargetProperty="(Ellipse.Effect).(DropShadowEffect.Opacity)"
+                                                                                             To="0.85"
+                                                                                             Duration="0:0:0.25" />
+                                                                            <DoubleAnimation Storyboard.TargetProperty="(Ellipse.Effect).(DropShadowEffect.BlurRadius)"
+                                                                                             To="16"
+                                                                                             Duration="0:0:0.25" />
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </DataTrigger.EnterActions>
+                                                                <DataTrigger.ExitActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation Storyboard.TargetProperty="(Ellipse.Effect).(DropShadowEffect.Opacity)"
+                                                                                             To="0"
+                                                                                             Duration="0:0:0.5" />
+                                                                            <DoubleAnimation Storyboard.TargetProperty="(Ellipse.Effect).(DropShadowEffect.BlurRadius)"
+                                                                                             To="12"
+                                                                                             Duration="0:0:0.5" />
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </DataTrigger.ExitActions>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
                                             <Grid Width="38"
                                                   Height="38"
                                                   ClipToBounds="True">
@@ -367,19 +537,35 @@
                                                        Margin="{Binding HatMargin}"
                                                        Stretch="Uniform"
                                                        HorizontalAlignment="Left"
-                                                       VerticalAlignment="Top" />
+                                                       VerticalAlignment="Top"
+                                                       RenderTransformOrigin="0.5,0.5">
+                                                    <Image.RenderTransform>
+                                                        <TransformGroup>
+                                                            <ScaleTransform ScaleX="2" ScaleY="2" />
+                                                            <TranslateTransform X="6" Y="-11" />
+                                                        </TransformGroup>
+                                                    </Image.RenderTransform>
+                                                </Image>
                                                 <Image Source="{Binding AvatarImage}"
-                                                       Width="40"
+                                                       Width="38"
                                                        Stretch="Uniform"
                                                        HorizontalAlignment="Left"
                                                        VerticalAlignment="Top"
-                                                       Margin="-9,6,0,0" />
+                                                       Margin="0" />
                                                 <Image Source="{Binding SkinImage}"
                                                        Width="{Binding SkinWidth}"
                                                        Margin="{Binding SkinMargin}"
                                                        Stretch="Uniform"
                                                        HorizontalAlignment="Left"
-                                                       VerticalAlignment="Top" />
+                                                       VerticalAlignment="Top"
+                                                       RenderTransformOrigin="0.5,0.5">
+                                                    <Image.RenderTransform>
+                                                        <TransformGroup>
+                                                            <ScaleTransform ScaleX="2" ScaleY="2" />
+                                                            <TranslateTransform X="6" Y="-11" />
+                                                        </TransformGroup>
+                                                    </Image.RenderTransform>
+                                                </Image>
                                             </Grid>
                                             <Image Source="{Binding VisorImage}"
                                                    Width="{Binding VisorWidth}"
@@ -392,7 +578,49 @@
                                                    Margin="{Binding HatMargin}"
                                                    Stretch="Uniform"
                                                    HorizontalAlignment="Left"
-                                                   VerticalAlignment="Top" />
+                                                   VerticalAlignment="Top"
+                                                   RenderTransformOrigin="0.5,0.5">
+                                                <Image.RenderTransform>
+                                                    <TransformGroup>
+                                                        <ScaleTransform ScaleX="2" ScaleY="2" />
+                                                        <TranslateTransform X="6" Y="-11" />
+                                                    </TransformGroup>
+                                                </Image.RenderTransform>
+                                            </Image>
+                                            <Border Width="16"
+                                                    Height="16"
+                                                    CornerRadius="8"
+                                                    Background="#DDFF174F"
+                                                    BorderBrush="White"
+                                                    BorderThickness="1"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Top"
+                                                    Margin="-2,-2,0,0"
+                                                    Visibility="{Binding IsUsingRadio, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <Viewbox Width="11" Height="11">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Fill="White"
+                                                              Data="M4 7.5C4 5.57 5.57 4 7.5 4H14C17.31 4 20 6.69 20 10V17.5C20 18.88 18.88 20 17.5 20H10C6.69 20 4 17.31 4 14V7.5ZM7.5 6C6.67 6 6 6.67 6 7.5V14C6 16.21 7.79 18 10 18H17.5C17.78 18 18 17.78 18 17.5V10C18 7.79 16.21 6 14 6H7.5ZM8 8H13V10H8V8ZM8 12H16V14H8V12Z" />
+                                                    </Canvas>
+                                                </Viewbox>
+                                            </Border>
+                                            <Border Width="16"
+                                                    Height="16"
+                                                    CornerRadius="8"
+                                                    Background="#DDCE93D8"
+                                                    BorderBrush="White"
+                                                    BorderThickness="1"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Top"
+                                                    Margin="0,-2,-2,0"
+                                                    Visibility="{Binding IsRemoteMuted, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <Viewbox Width="11" Height="11">
+                                                    <Canvas Width="24" Height="24">
+                                                        <Path Fill="White"
+                                                              Data="M12 14C13.66 14 15 12.66 15 11V5C15 3.34 13.66 2 12 2S9 3.34 9 5V11C9 12.66 10.34 14 12 14ZM17.3 11C17.3 14 14.76 16.1 12 16.1S6.7 14 6.7 11H5C5 14.41 7.72 17.23 11 17.72V21H13V17.72C16.28 17.24 19 14.42 19 11H17.3ZM19 5L5 19L6.4 20.4L20.4 6.4L19 5Z" />
+                                                    </Canvas>
+                                                </Viewbox>
+                                            </Border>
                                         </Grid>
                                     </Grid>
                                     <TextBlock Text="{Binding Name}"
@@ -417,6 +645,7 @@
                     </Grid.ColumnDefinitions>
                     <Button Grid.Column="0"
                             Style="{StaticResource TitleIconButton}"
+                            Command="{Binding OpenGitHubCommand}"
                             Width="48"
                             Height="48">
                         <Viewbox Width="34" Height="34">
@@ -428,6 +657,7 @@
                     </Button>
                     <Button Grid.Column="1"
                             Style="{StaticResource TitleIconButton}"
+                            Command="{Binding OpenDiscordCommand}"
                             Width="48"
                             Height="48">
                         <Viewbox Width="34" Height="34">
@@ -443,7 +673,7 @@
             </Grid>
 
             <Border Background="#EE1B1A20"
-                    Padding="12,0,12,0"
+                    Padding="12,0,0,0"
                     Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -467,51 +697,65 @@
                                 VerticalAlignment="Center" />
                     </Grid>
 
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <StackPanel>
+                    <ScrollViewer Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="0"
+                                  Margin="0,0,-2,0">
+                        <ScrollViewer.Resources>
+                            <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource SettingsScrollBar}" />
+                        </ScrollViewer.Resources>
+                        <StackPanel Margin="0,0,12,0">
                             <Separator Background="#333139" Margin="0,0,0,12" />
 
                             <TextBlock Text="ロビー設定"
                                        FontSize="20"
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center" />
-                            <TextBlock Text="{Binding Settings.LocalLobbySettings.MaxDistance, StringFormat=ボイスの距離: {0:0.0}}"
-                                       FontWeight="Bold"
-                                       HorizontalAlignment="Center"
-                                       Margin="0,4,0,2" />
-                            <Slider Minimum="0.5"
-                                    Maximum="20"
-                                    Value="{Binding Settings.LocalLobbySettings.MaxDistance}" />
-                            <Separator Background="#333139" />
-                            <CheckBox Content="ロビーを公開する" IsChecked="{Binding Settings.LocalLobbySettings.PublicLobbyOn}" />
-                            <Button Content="ロビー情報の変更"
-                                    IsEnabled="{Binding Settings.LocalLobbySettings.PublicLobbyOn}"
-                                    Style="{StaticResource OutlinedActionButton}"
-                                    HorizontalAlignment="Stretch"
-                                    Margin="0,0,0,8" />
-                            <CheckBox Content="壁越しで音声をブロック" IsChecked="{Binding Settings.LocalLobbySettings.WallsBlockAudio}" />
-                            <Separator Background="#333139" />
-                            <CheckBox Content="視野内のプレイヤーの声だけが聞こえる" IsChecked="{Binding Settings.LocalLobbySettings.VisionHearing}" />
-                            <Separator Background="#333139" />
-                            <CheckBox Content="インポスターが幽霊の声も聞こえる" IsChecked="{Binding Settings.LocalLobbySettings.Haunting}" />
-                            <Separator Background="#333139" />
-                            <CheckBox Content="第三陣営が幽霊の声も聞こえる" IsChecked="{Binding Settings.LocalLobbySettings.ThirdPartyHaunting}" />
-                            <Separator Background="#333139" />
-                            <CheckBox Content="ボイスエフェクトを有効化" IsChecked="{Binding Settings.LocalLobbySettings.VoiceEffectEnabled}" />
-                            <Separator Background="#333139" />
-                            <CheckBox Content="インポスターはベント内にいても声が聞こえる" IsChecked="{Binding Settings.LocalLobbySettings.HearImpostorsInVents}" />
-                            <Separator Background="#333139" />
-                            <CheckBox Content="インポスター同士でベント内で会話ができる" IsChecked="{Binding Settings.LocalLobbySettings.ImpostorsHearImpostorsInVent}" />
-                            <Separator Background="#333139" />
-                            <CheckBox Content="コミュサボタージュで音声を無効化" IsChecked="{Binding Settings.LocalLobbySettings.CommsSabotage}" />
-                            <Separator Background="#333139" />
-                            <CheckBox Content="カメラ越しに声が聞こえる" IsChecked="{Binding Settings.LocalLobbySettings.HearThroughCameras}" />
-                            <Separator Background="#333139" />
-                            <CheckBox Content="インポスターラジオ" IsChecked="{Binding Settings.LocalLobbySettings.ImpostorRadioEnabled}" />
-                            <Separator Background="#333139" />
-                            <CheckBox Content="幽霊だけが話す/聞くことが可能" IsChecked="{Binding Settings.LocalLobbySettings.DeadOnly}" />
-                            <Separator Background="#333139" />
-                            <CheckBox Content="ミーティング/ロビーのみ" IsChecked="{Binding Settings.LocalLobbySettings.MeetingGhostOnly}" />
+                            <TextBlock Text="{Binding LobbySettingsModeText}"
+                                       Foreground="{StaticResource SubtleTextBrush}"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       Margin="0,2,0,4" />
+                            <StackPanel IsEnabled="{Binding CanChangeLobbySettings}">
+                                <TextBlock Text="{Binding EffectiveMaxDistance, StringFormat=ボイスの距離: {0:0.0}}"
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,4,0,2" />
+                                <Slider Minimum="0.5"
+                                        Maximum="20"
+                                        Value="{Binding EffectiveMaxDistance}" />
+                                <Separator Background="#333139" />
+                                <CheckBox Content="ロビーを公開する" IsChecked="{Binding EffectivePublicLobbyOn}" />
+                                <Button Content="ロビー情報の変更"
+                                        IsEnabled="{Binding EffectivePublicLobbyOn}"
+                                        Command="{Binding OpenPublicLobbySettingsCommand}"
+                                        Style="{StaticResource OutlinedActionButton}"
+                                        HorizontalAlignment="Stretch"
+                                        Margin="0,0,0,8" />
+                                <CheckBox Content="壁越しで音声をブロック" IsChecked="{Binding EffectiveWallsBlockAudio}" />
+                                <Separator Background="#333139" />
+                                <CheckBox Content="視野内のプレイヤーの声だけが聞こえる" IsChecked="{Binding EffectiveVisionHearing}" />
+                                <Separator Background="#333139" />
+                                <CheckBox Content="インポスターが幽霊の声も聞こえる" IsChecked="{Binding EffectiveHaunting}" />
+                                <Separator Background="#333139" />
+                                <CheckBox Content="第三陣営が幽霊の声も聞こえる" IsChecked="{Binding EffectiveThirdPartyHaunting}" />
+                                <Separator Background="#333139" />
+                                <CheckBox Content="ボイスエフェクトを有効化" IsChecked="{Binding EffectiveVoiceEffectEnabled}" />
+                                <Separator Background="#333139" />
+                                <CheckBox Content="インポスターはベント内にいても声が聞こえる" IsChecked="{Binding EffectiveHearImpostorsInVents}" />
+                                <Separator Background="#333139" />
+                                <CheckBox Content="インポスター同士でベント内で会話ができる" IsChecked="{Binding EffectiveImpostorsHearImpostorsInVent}" />
+                                <Separator Background="#333139" />
+                                <CheckBox Content="コミュサボタージュで音声を無効化" IsChecked="{Binding EffectiveCommsSabotage}" />
+                                <Separator Background="#333139" />
+                                <CheckBox Content="カメラ越しに声が聞こえる" IsChecked="{Binding EffectiveHearThroughCameras}" />
+                                <Separator Background="#333139" />
+                                <CheckBox Content="インポスターラジオ" IsChecked="{Binding EffectiveImpostorRadioEnabled}" />
+                                <Separator Background="#333139" />
+                                <CheckBox Content="幽霊だけが話す/聞くことが可能" IsChecked="{Binding EffectiveDeadOnly}" />
+                                <Separator Background="#333139" />
+                                <CheckBox Content="ミーティング/ロビーのみ" IsChecked="{Binding EffectiveMeetingGhostOnly}" />
+                            </StackPanel>
 
                             <TextBlock Text="オーディオ"
                                        FontSize="20"
@@ -547,29 +791,35 @@
                             <TextBlock Text="ボイスエフェクトの強さ"
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center" />
-                            <Slider Minimum="0" Maximum="200" Value="{Binding Settings.VoiceEffectStrength}" />
+                            <Slider Minimum="0" Maximum="200" Value="{Binding VoiceEffectStrength, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             <Button Content="{Binding VoiceEffectTestButtonText}"
                                     Command="{Binding TestVoiceEffectCommand}"
                                     Style="{StaticResource HotPinkButton}"
                                     HorizontalAlignment="Center"
                                     Margin="0,6,0,12" />
-                            <RadioButton Content="常に有効" GroupName="PushMode" IsChecked="True" />
-                            <RadioButton Content="押して話す" GroupName="PushMode" />
-                            <RadioButton Content="押してミュート" GroupName="PushMode" />
+                            <RadioButton Content="常に有効"
+                                         GroupName="PushMode"
+                                         IsChecked="{Binding SelectedPushToTalkMode, Mode=TwoWay, Converter={StaticResource EnumBooleanConverter}, ConverterParameter={x:Static models:PushToTalkMode.Voice}}" />
+                            <RadioButton Content="押して話す"
+                                         GroupName="PushMode"
+                                         IsChecked="{Binding SelectedPushToTalkMode, Mode=TwoWay, Converter={StaticResource EnumBooleanConverter}, ConverterParameter={x:Static models:PushToTalkMode.PushToTalk}}" />
+                            <RadioButton Content="押してミュート"
+                                         GroupName="PushMode"
+                                         IsChecked="{Binding SelectedPushToTalkMode, Mode=TwoWay, Converter={StaticResource EnumBooleanConverter}, ConverterParameter={x:Static models:PushToTalkMode.PushToMute}}" />
                             <Separator Background="#333139" />
                             <TextBlock Text="マイク音量" Margin="0,8,0,0" />
-                            <CheckBox Content="" IsChecked="{Binding Settings.MicrophoneGainEnabled}" />
-                            <Slider Minimum="0" Maximum="200" Value="{Binding Settings.MicrophoneGain}" />
-                            <TextBlock Text="マイク諢溷ｺｦ" />
-                            <CheckBox Content="" IsChecked="{Binding Settings.MicSensitivityEnabled}" />
-                            <Slider Minimum="0" Maximum="1" Value="{Binding Settings.MicSensitivity}" />
+                            <CheckBox Content="" IsChecked="{Binding MicrophoneGainEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Slider Minimum="0" Maximum="200" Value="{Binding MicrophoneGain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="マイク感度" />
+                            <CheckBox Content="" IsChecked="{Binding MicSensitivityEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Slider Minimum="0" Maximum="1" Value="{Binding MicSensitivity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             <Separator Background="#333139" />
                             <TextBlock Text="マスターボリューム" Margin="0,8,0,0" />
-                            <Slider Minimum="0" Maximum="200" Value="{Binding Settings.MasterVolume}" />
+                            <Slider Minimum="0" Maximum="200" Value="{Binding MasterVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             <TextBlock Text="幽霊クルーの音量" />
-                            <Slider Minimum="0" Maximum="200" Value="{Binding Settings.CrewVolumeAsGhost}" />
+                            <Slider Minimum="0" Maximum="200" Value="{Binding CrewVolumeAsGhost, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             <TextBlock Text="インポスター時の幽霊の音量" />
-                            <Slider Minimum="0" Maximum="200" Value="{Binding Settings.GhostVolumeAsImpostor}" />
+                            <Slider Minimum="0" Maximum="200" Value="{Binding GhostVolumeAsImpostor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                             <TextBlock Text="キーボードショートカット"
                                        FontSize="20"
@@ -584,15 +834,27 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="押して話す" Foreground="{StaticResource SubtleTextBrush}" />
-                                    <TextBox Text="{Binding Settings.PushToTalkShortcut, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Text="{Binding Settings.PushToTalkShortcut, UpdateSourceTrigger=PropertyChanged}"
+                                             Tag="PushToTalkShortcut"
+                                             PreviewKeyDown="OnShortcutPreviewKeyDown"
+                                             PreviewMouseDown="OnShortcutPreviewMouseDown" />
                                     <TextBlock Text="ミュート" Foreground="{StaticResource SubtleTextBrush}" />
-                                    <TextBox Text="{Binding Settings.MuteShortcut, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Text="{Binding Settings.MuteShortcut, UpdateSourceTrigger=PropertyChanged}"
+                                             Tag="MuteShortcut"
+                                             PreviewKeyDown="OnShortcutPreviewKeyDown"
+                                             PreviewMouseDown="OnShortcutPreviewMouseDown" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="インポスターラジオ" Foreground="{StaticResource SubtleTextBrush}" />
-                                    <TextBox Text="{Binding Settings.ImpostorRadioShortcut, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Text="{Binding Settings.ImpostorRadioShortcut, UpdateSourceTrigger=PropertyChanged}"
+                                             Tag="ImpostorRadioShortcut"
+                                             PreviewKeyDown="OnShortcutPreviewKeyDown"
+                                             PreviewMouseDown="OnShortcutPreviewMouseDown" />
                                     <TextBlock Text="スピーカーミュート" Foreground="{StaticResource SubtleTextBrush}" />
-                                    <TextBox Text="{Binding Settings.DeafenShortcut, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Text="{Binding Settings.DeafenShortcut, UpdateSourceTrigger=PropertyChanged}"
+                                             Tag="DeafenShortcut"
+                                             PreviewKeyDown="OnShortcutPreviewKeyDown"
+                                             PreviewMouseDown="OnShortcutPreviewMouseDown" />
                                 </StackPanel>
                             </Grid>
                             <Separator Background="#333139" />
@@ -602,26 +864,26 @@
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center"
                                        Margin="0,14,0,8" />
-                            <CheckBox Content="最前面に表示" IsChecked="{Binding Settings.AlwaysOnTop}" />
-                            <CheckBox Content="オーバーレイを有効化" IsChecked="{Binding Settings.EnableOverlay}" />
-                            <CheckBox Content="コンパクトなオーバーレイ" IsChecked="{Binding Settings.CompactOverlay}" />
-                            <CheckBox Content="隴ｰ隲悶・オーバーレイ陦ｨ遉ｺ" IsChecked="{Binding Settings.MeetingOverlay}" />
+                            <CheckBox Content="最前面に表示" IsChecked="{Binding AlwaysOnTop, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox Content="オーバーレイを有効化" IsChecked="{Binding EnableOverlay, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox Content="コンパクトなオーバーレイ" IsChecked="{Binding CompactOverlay, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox Content="議論のオーバーレイ表示" IsChecked="{Binding MeetingOverlay, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             <TextBlock Text="オーバーレイの位置" Foreground="{StaticResource SubtleTextBrush}" />
-                            <ComboBox Text="{Binding Settings.OverlayPosition, UpdateSourceTrigger=PropertyChanged}"
-                                      IsEditable="True">
-                                <ComboBoxItem Content="右" />
-                                <ComboBoxItem Content="左" />
-                            </ComboBox>
+                            <ComboBox ItemsSource="{Binding OverlayPositionOptions}"
+                                      DisplayMemberPath="Label"
+                                      SelectedValuePath="Value"
+                                      SelectedValue="{Binding OverlayPosition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="False" />
 
                             <TextBlock Text="詳細設定"
                                        FontSize="20"
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center"
                                        Margin="0,18,0,8" />
-                            <CheckBox Content="NATの修正" IsChecked="{Binding Settings.NatFix}" />
+                            <CheckBox Content="NATの修正" IsChecked="{Binding NatFix, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             <Button Content="ボイスサーバーの変更"
                                     Style="{StaticResource HotPinkButton}"
-                                    Command="{Binding SaveCommand}"
+                                    Command="{Binding OpenVoiceServerSettingsCommand}"
                                     HorizontalAlignment="Center"
                                     Margin="0,0,0,12" />
 
@@ -630,27 +892,54 @@
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center"
                                        Margin="0,10,0,8" />
-                            <CheckBox Content="モバイルホスト" IsChecked="{Binding Settings.MobileHost}" />
-                            <CheckBox Content="音声アクティビティ検出" IsChecked="{Binding Settings.VadEnabled}" />
-                            <CheckBox Content="ハードウェア アクセラレーション" IsChecked="{Binding Settings.HardwareAcceleration}" />
-                            <CheckBox Content="エコーキャンセラー" IsChecked="{Binding Settings.EchoCancellation}" />
-                            <CheckBox Content="立体音響" IsChecked="{Binding Settings.EnableSpatialAudio}" />
-                            <CheckBox Content="ノイズ防止" IsChecked="{Binding Settings.NoiseSuppression}" />
-                            <CheckBox Content="サンプルレートデバッグ" IsChecked="{Binding Settings.OldSampleDebug}" />
+                            <CheckBox Content="モバイルホスト" IsChecked="{Binding MobileHost, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox Content="音声アクティビティ検出" IsChecked="{Binding VadEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox Content="ハードウェア アクセラレーション" IsChecked="{Binding HardwareAcceleration, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox Content="エコーキャンセラー" IsChecked="{Binding EchoCancellation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox Content="立体音響" IsChecked="{Binding EnableSpatialAudio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox Content="ノイズ防止" IsChecked="{Binding NoiseSuppression, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox Content="サンプルレートデバッグ" IsChecked="{Binding OldSampleDebug, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="{Binding VoiceCaptureStatus}"
+                                       Foreground="{StaticResource SubtleTextBrush}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Margin="0,4,0,0" />
+                            <TextBlock Text="{Binding PeerConnectionStatus}"
+                                       Foreground="{StaticResource SubtleTextBrush}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,8" />
                             <TextBlock Text="言語" Foreground="{StaticResource SubtleTextBrush}" />
-                            <ComboBox Text="{Binding Settings.Language, UpdateSourceTrigger=PropertyChanged}"
-                                      IsEditable="True">
-                                <ComboBoxItem Content="日本語" />
-                                <ComboBoxItem Content="English" />
-                            </ComboBox>
+                            <ComboBox ItemsSource="{Binding LanguageOptions}"
+                                      DisplayMemberPath="Label"
+                                      SelectedValuePath="Value"
+                                      SelectedValue="{Binding Language, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      IsEditable="False" />
 
                             <TextBlock Text="配信設定"
                                        FontSize="20"
                                        FontWeight="Bold"
                                        HorizontalAlignment="Center"
                                        Margin="0,18,0,8" />
-                            <CheckBox Content="ロビーコードの表示" IsChecked="{Binding Settings.HideCode}" />
-                            <CheckBox Content="OBS ブラウザーのオーバーレイ" IsChecked="{Binding Settings.ObsOverlay}" />
+                            <CheckBox Content="ロビーコードを隠す" IsChecked="{Binding HideCode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <CheckBox Content="OBS ブラウザーのオーバーレイ" IsChecked="{Binding ObsOverlay, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBlock Text="{Binding ObsOverlayStatus}"
+                                       Foreground="{StaticResource SubtleTextBrush}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Margin="0,-2,0,6" />
+                            <StackPanel Orientation="Horizontal"
+                                        Margin="0,0,0,8">
+                                <Button Content="URLコピー"
+                                        Command="{Binding CopyObsOverlayUrlCommand}"
+                                        Style="{StaticResource OutlinedActionButton}"
+                                        Padding="10,5"
+                                        Margin="0,0,8,0" />
+                                <Button Content="URL再生成"
+                                        Command="{Binding RegenerateObsSecretCommand}"
+                                        Style="{StaticResource OutlinedActionButton}"
+                                        Padding="10,5" />
+                            </StackPanel>
 
                             <TextBlock Text="トラブルシューティング"
                                        FontSize="20"
@@ -659,10 +948,257 @@
                                        Margin="0,18,0,8" />
                             <Button Content="デフォルトに戻す"
                                     Style="{StaticResource HotPinkButton}"
+                                    Command="{Binding ResetSettingsCommand}"
                                     HorizontalAlignment="Left"
                                     Margin="0,0,0,22" />
                         </StackPanel>
                     </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <Border Background="#F51B1A20"
+                    Padding="12,0,12,0"
+                    Visibility="{Binding IsVoiceServerSettingsOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="52" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <TextBlock Text="ボイスサーバーの変更"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                        <Button Content="←"
+                                Command="{Binding CloseVoiceServerSettingsCommand}"
+                                Style="{StaticResource TitleIconButton}"
+                                Width="34"
+                                Height="34"
+                                FontSize="24"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center" />
+                    </Grid>
+
+                    <StackPanel Grid.Row="1">
+                        <TextBlock Text="保存済みボイスサーバー" Foreground="{StaticResource SubtleTextBrush}" />
+                        <ComboBox ItemsSource="{Binding VoiceServerUrls}"
+                                  SelectedValue="{Binding SelectedVoiceServerUrl, UpdateSourceTrigger=PropertyChanged}"
+                                  IsEditable="False" />
+                        <TextBlock Text="ボイスサーバー" Foreground="{StaticResource SubtleTextBrush}" />
+                        <TextBox Text="{Binding VoiceServerUrl, UpdateSourceTrigger=PropertyChanged}"
+                                 SpellCheck.IsEnabled="False" />
+                        <TextBlock Text="URL が正しくありません。例: https://bettercrewl.ink または bettercrewl.ink"
+                                   Foreground="#FF6B8A"
+                                   TextWrapping="Wrap"
+                                   Margin="0,-8,0,8"
+                                   Visibility="{Binding IsVoiceServerUrlValid, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                        <Border Background="#3A2030"
+                                BorderBrush="#FF174F"
+                                BorderThickness="1"
+                                Padding="8"
+                                Margin="0,0,0,10">
+                            <TextBlock Text="信頼できるボイスサーバーだけを使ってください。サーバーを変更するとボイス接続を張り直します。"
+                                       TextWrapping="Wrap"
+                                       Foreground="White" />
+                        </Border>
+                        <Button Content="デフォルトに戻す"
+                                Command="{Binding ResetVoiceServerCommand}"
+                                Style="{StaticResource HotPinkButton}"
+                                HorizontalAlignment="Left"
+                                Margin="0,0,0,8" />
+                        <Button Content="このサーバーを削除"
+                                Command="{Binding RemoveVoiceServerCommand}"
+                                IsEnabled="{Binding CanRemoveVoiceServer}"
+                                Style="{StaticResource OutlinedActionButton}"
+                                HorizontalAlignment="Left" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="2"
+                          Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button Content="キャンセル"
+                                Command="{Binding CloseVoiceServerSettingsCommand}"
+                                Style="{StaticResource OutlinedActionButton}"
+                                HorizontalAlignment="Left" />
+                        <Button Grid.Column="3"
+                                Content="追加/保存"
+                                Command="{Binding SaveVoiceServerSettingsCommand}"
+                                IsEnabled="{Binding IsVoiceServerUrlValid}"
+                                Style="{StaticResource HotPinkButton}" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Border Background="#F51B1A20"
+                    Padding="12,0,12,0"
+                    Visibility="{Binding IsPublicLobbyBrowserOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="52" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <TextBlock Text="公開ロビー"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                        <Button Content="←"
+                                Command="{Binding ClosePublicLobbyBrowserCommand}"
+                                Style="{StaticResource TitleIconButton}"
+                                Width="34"
+                                Height="34"
+                                FontSize="24"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock Grid.Row="1"
+                               Text="{Binding PublicLobbyBrowserMessage}"
+                               Foreground="{StaticResource SubtleTextBrush}"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               Margin="0,0,0,8" />
+
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding PublicLobbies}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#3B3842"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="0,8">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontWeight="Bold"
+                                                       FontSize="14"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Margin="0,0,8,2" />
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding PlayersText}"
+                                                       FontFamily="Source Code Pro, Consolas"
+                                                       Foreground="{StaticResource PrimaryBrush}" />
+                                            <TextBlock Grid.Row="1"
+                                                       Grid.ColumnSpan="2"
+                                                       Text="{Binding Host, StringFormat=Host: {0}}"
+                                                       Foreground="{StaticResource SubtleTextBrush}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <Grid Grid.Row="2"
+                                                  Grid.ColumnSpan="2"
+                                                  Margin="0,6,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding ModsText}"
+                                                               FontSize="12"
+                                                               Foreground="{StaticResource SubtleTextBrush}"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{Binding LanguageText, StringFormat={}{0}}"
+                                                               FontSize="12"
+                                                               Foreground="{StaticResource SubtleTextBrush}" />
+                                                    <TextBlock Text="{Binding StatusText}"
+                                                               FontSize="12"
+                                                               Foreground="{StaticResource SubtleTextBrush}" />
+                                                </StackPanel>
+                                                <Button Grid.Column="1"
+                                                        Content="コード"
+                                                        Command="{Binding DataContext.RequestPublicLobbyCodeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        IsEnabled="{Binding CanShowCode}"
+                                                        Style="{StaticResource OutlinedActionButton}"
+                                                        Padding="10,5"
+                                                        VerticalAlignment="Center" />
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <Border Background="#F51B1A20"
+                    Padding="12,0,12,0"
+                    Visibility="{Binding IsPublicLobbySettingsOpen, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="52" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <TextBlock Text="ロビー情報の変更"
+                                   FontSize="18"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                        <Button Content="←"
+                                Command="{Binding ClosePublicLobbySettingsCommand}"
+                                Style="{StaticResource TitleIconButton}"
+                                Width="34"
+                                Height="34"
+                                FontSize="24"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center" />
+                    </Grid>
+
+                    <StackPanel Grid.Row="1">
+                        <TextBlock Text="タイトル" Foreground="{StaticResource SubtleTextBrush}" />
+                        <TextBox Text="{Binding PublicLobbyTitle, UpdateSourceTrigger=PropertyChanged}"
+                                 MaxLength="40"
+                                 SpellCheck.IsEnabled="False" />
+                        <TextBlock Text="言語" Foreground="{StaticResource SubtleTextBrush}" />
+                        <ComboBox ItemsSource="{Binding LanguageOptions}"
+                                  DisplayMemberPath="Label"
+                                  SelectedValuePath="Value"
+                                  SelectedValue="{Binding PublicLobbyLanguage, UpdateSourceTrigger=PropertyChanged}"
+                                  IsEditable="False" />
+                        <TextBlock Text="MOD" Foreground="{StaticResource SubtleTextBrush}" />
+                        <ComboBox ItemsSource="{Binding ModOptions}"
+                                  DisplayMemberPath="Label"
+                                  SelectedValuePath="Value"
+                                  SelectedValue="{Binding PublicLobbyMods, UpdateSourceTrigger=PropertyChanged}"
+                                  IsEditable="False" />
+                        <Border Background="#3A2030"
+                                BorderBrush="#FF174F"
+                                BorderThickness="1"
+                                Padding="8"
+                                Margin="0,8,0,0">
+                            <TextBlock Text="公開ロビーにすると、参加者にロビー情報が表示されます。迷惑行為につながる内容は入れないでください。"
+                                       TextWrapping="Wrap"
+                                       Foreground="White" />
+                        </Border>
+                    </StackPanel>
+
+                    <Button Grid.Row="2"
+                            Content="OK"
+                            Command="{Binding ClosePublicLobbySettingsCommand}"
+                            Style="{StaticResource HotPinkButton}"
+                            HorizontalAlignment="Right"
+                            Margin="0,0,0,14" />
                 </Grid>
             </Border>
         </Grid>
